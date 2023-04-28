@@ -1,8 +1,8 @@
-### Fork information / Changes
+# Fork information / Changes
 Forked from https://github.com/blacklanternsecurity/TREVORspray.
 
 Added functionality:
-- `--slack-url` option for submitting specific logging info to Slack.
+- `--slack-url` option for submitting specific logging info to Slack web hooks.
 
 # New Installation instructions
 ~~~bash
