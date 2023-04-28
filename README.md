@@ -4,6 +4,13 @@ Forked from https://github.com/blacklanternsecurity/TREVORspray.
 Added functionality:
 - `--slack-url` option for submitting specific logging info to Slack.
 
+# New Installation instructions
+~~~bash
+
+pip install git+https://github.com/blacklanternsecurity/trevorproxy
+pip install git+https://github.com/ldcvanderpoel/TREVORspray
+~~~
+
 # TREVORspray 2.0
 TREVORspray is a modular password sprayer with threading, SSH proxying, loot modules, and more!
 
@@ -11,12 +18,6 @@ By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
 
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://raw.githubusercontent.com/blacklanternsecurity/nmappalyzer/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.6+-blue)](https://www.python.org)
-
-## Installation:
-~~~bash
-pip install git+https://github.com/blacklanternsecurity/trevorproxy
-pip install git+https://github.com/blacklanternsecurity/trevorspray
-~~~
 
 See the accompanying [**Blog Post**](blogpost.md) for a fun rant and some cool demos!
 
