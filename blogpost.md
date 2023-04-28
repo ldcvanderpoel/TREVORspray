@@ -1,10 +1,3 @@
-### Fork information / Changes
-Forked from https://github.com/blacklanternsecurity/TREVORspray.
-
-Added functionality:
-- `--slack-url` option for submitting specific logging info to Slack.
-
-
 ### Password spraying is one of the great joys of pentesting. Or at least, it used to be.
 
 Classically, password spraying has been the single lowest-effort and highest-yield technique for gaining an initial foothold in an organization. This made it pretty fun. You start by gathering up a big list of emails, then you kick off a spray with a stupid password like "Spring2022!", and spend the next ten minutes getting disproportionately large and debatably undeserved hits of dopamine as you discover just how many employees are using that stupid password.

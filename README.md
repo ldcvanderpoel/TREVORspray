@@ -1,3 +1,9 @@
+### Fork information / Changes
+Forked from https://github.com/blacklanternsecurity/TREVORspray.
+
+Added functionality:
+- `--slack-url` option for submitting specific logging info to Slack.
+
 # TREVORspray 2.0
 TREVORspray is a modular password sprayer with threading, SSH proxying, loot modules, and more!
 
