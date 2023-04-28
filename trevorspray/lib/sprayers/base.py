@@ -7,7 +7,6 @@ import requests
 
 from ..errors import TREVORSprayError
 from ..util import windows_user_agent
-from ..util.slack import send_slack_message
 
 log = logging.getLogger('trevorspray.sprayers.base')
 
