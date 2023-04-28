@@ -2,17 +2,17 @@
 
 # by TheTechromancer
 
+import argparse
+import ipaddress
+import logging
 import os
 import sys
-import logging
-import argparse
-import requests
-import ipaddress
-from time import sleep
-from shutil import which
-from pathlib import Path
 from getpass import getpass
+from pathlib import Path
+from shutil import which
+from time import sleep
 
+import requests
 from urllib3.exceptions import InsecureRequestWarning
 
 # Suppress only the single warning from urllib3 needed.
@@ -21,11 +21,10 @@ requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 package_path = Path(__file__).resolve().parent
 sys.path.append(str(package_path))
 
-from lib import logger
 import lib.util as util
-from lib import sprayers
-from lib.trevor import TrevorSpray
+from lib import logger, sprayers
 from lib.errors import TREVORSprayError
+from lib.trevor import TrevorSpray
 
 log = logging.getLogger('trevorspray.cli')
 
@@ -55,6 +54,7 @@ def main():
     advanced_group.add_argument('-6', '--prefer-ipv6', action='store_true', help='Prefer IPv6 over IPv4')
     advanced_group.add_argument('--proxy', help='Proxy to use for HTTP and HTTPS requests')
     advanced_group.add_argument('-v', '--verbose', '--debug', action='store_true', help='Show which proxy is being used for each request')
+    advanced_group.add_argument('--slack-url', help='Send important output to Slack webhook URL.')
 
     ssh_group = parser.add_argument_group(title='SSH Proxy', description='Round-robin traffic through remote systems via SSH (overrides --threads)')
     ssh_group.add_argument('-s', '--ssh', default=[], metavar='USER@SERVER', nargs='+', help='Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round')

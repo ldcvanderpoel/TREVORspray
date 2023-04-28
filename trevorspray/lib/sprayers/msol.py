@@ -1,8 +1,9 @@
-import uuid
 import logging
+import uuid
 from contextlib import suppress
-from .base import BaseSprayModule
+
 from ..looters.msol import MSOLLooter
+from .base import BaseSprayModule
 
 log = logging.getLogger('trevorspray.sprayers.msol')
 

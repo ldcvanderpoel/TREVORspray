@@ -1,16 +1,17 @@
-import os
-import time
-import logging
 import importlib
+import logging
+import os
 import threading
-from . import util
-from . import sprayers
-from pathlib import Path
-from . import enumerators
+import time
 from contextlib import suppress
+from pathlib import Path
+
 from tldextract import tldextract
+
+from . import enumerators, sprayers, util
 from .discover import DomainDiscovery
 from .proxy import ProxyThread, SubnetThread
+from .util.slack import send_slack_message
 
 log = logging.getLogger('trevorspray.sprayer')
 
@@ -122,9 +123,15 @@ class TrevorSpray:
 
                 # password spray
                 if self.options.passwords:
-                    log.info(f'Spraying {len(self.options.users):,} users * {len(self.options.passwords):,} passwords against {self.sprayer.url} at {time.ctime()}')
+                    start_message = f'Spraying {len(self.options.users):,} users * {len(self.options.passwords):,} passwords against {self.sprayer.url} at {time.ctime()}'
+                    log.info(start_message)
+                    if self.options.slack_url:
+                        send_slack_message(start_message, self.options.slack_url)
                     self.spray()
-                    log.info(f'Finished spraying {self.sprayed_counter:,} users against {self.sprayer.url} at {time.ctime()}')
+                    end_message = f'Finished spraying {self.sprayed_counter:,} users against {self.sprayer.url} at {time.ctime()}'
+                    log.info(end_message)
+                    if self.options.slack_url:
+                        send_slack_message(end_message, self.options.slack_url)
                     for success in self.valid_logins:
                         log.success(success)
         finally:

@@ -1,12 +1,15 @@
-import random
 import logging
-import requests
+import random
 import threading
-from time import sleep
 from contextlib import suppress
-from trevorproxy.lib.ssh import SSHProxy
-from .util import windows_user_agent, request
+from time import sleep
+
+import requests
 from trevorproxy.lib.errors import SSHProxyError
+from trevorproxy.lib.ssh import SSHProxy
+
+from .util import request, windows_user_agent
+from .util.slack import send_slack_message
 
 log = logging.getLogger('trevorspray.proxy')
 
@@ -22,8 +25,8 @@ class SubnetThread(threading.Thread):
 
     def run(self):
 
+        from trevorproxy.lib.socks import SocksProxy, ThreadingTCPServer
         from trevorproxy.lib.subnet import SubnetProxy
-        from trevorproxy.lib.socks import ThreadingTCPServer, SocksProxy
 
         subnet_proxy = SubnetProxy(
             interface=self.trevor.options.interface,
@@ -143,10 +146,15 @@ class ProxyThread(threading.Thread):
                         exists = True
                         log.success(f'{user}{password_str} - {msg}')
                         self.trevor.valid_logins.append(f'{user}:{password}')
+
+                        if self.trevor.options.slack_url:
+                            send_slack_message(f'Found a valid password for user.', self.trevor.options.slack_url)
                         if self.trevor.options.exit_on_success:
                             self.trevor._stop = True
                     elif locked:
                         log.error(f'{user}{password_str} - {msg}')
+                        if self.trevor.options.slack_url:
+                            send_slack_message(f'User account locked.', self.trevor.options.slack_url)
                     elif exists:
                         log.warning(f'{user}{password_str} - {msg}')
                     else:
@@ -168,7 +176,10 @@ class ProxyThread(threading.Thread):
 
                     # If the force flag isn't set and lockout count is 10 we'll ask if the user is sure they want to keep spraying
                     if not self.trevor.options.ignore_lockouts and self.trevor.lockout_counter == 10 and self.trevor.lockout_question == False:
-                        log.error('Multiple Account Lockouts Detected!')
+                        lockout_message = 'Multiple Account Lockouts Detected! Manual intervention required.'
+                        log.error(lockout_message)
+                        if self.trevor.options.slack_url:
+                            send_slack_message(lockout_message, self.trevor.options.slack_url)
                         log.error('10 of the accounts you sprayed appear to be locked out. Do you want to continue this spray?')
                         yes = {'yes', 'y'}
                         no = {'no', 'n', ''}
@@ -301,6 +312,7 @@ class ProxyThread(threading.Thread):
                 continue
             try:
                 valid, exists, locked, msg = sprayer.check_response(response)
+
                 success = True
             except Exception as e:
                 log.error(f'Unhandled error in {sprayer.__class__.__name__}.check_response(): {e} (-v to debug)')

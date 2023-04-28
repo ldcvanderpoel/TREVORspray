@@ -1,9 +1,13 @@
 import logging
-import requests
+from datetime import datetime
 from time import sleep
 from urllib.parse import quote
-from ..util import windows_user_agent
+
+import requests
+
 from ..errors import TREVORSprayError
+from ..util import windows_user_agent
+from ..util.slack import send_slack_message
 
 log = logging.getLogger('trevorspray.sprayers.base')
 
@@ -34,6 +38,8 @@ class BaseSprayModule:
     looter = None
     # How many times to retry HTTP requests
     retries = 'infinite'
+    # Slack URL
+    slack_url = None
 
     def __init__(self, trevor):
 
@@ -56,6 +62,7 @@ class BaseSprayModule:
         if not self.headers.get('User-Agent', ''):
             self.headers['User-Agent'] = windows_user_agent
 
+        self.slack_url = self.trevor.options.slack_url
 
     def initialize(self):
         return True
@@ -130,7 +137,8 @@ class BaseSprayModule:
         if getattr(response, 'status_code', 0) == 200:
             valid = True
             exists = True
-            msg = 'Valid cred'
+            msg = 'Valid cred'         
+            
 
         return (valid, exists, locked, msg)
 
