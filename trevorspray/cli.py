@@ -54,7 +54,10 @@ def main():
     advanced_group.add_argument('-6', '--prefer-ipv6', action='store_true', help='Prefer IPv6 over IPv4')
     advanced_group.add_argument('--proxy', help='Proxy to use for HTTP and HTTPS requests')
     advanced_group.add_argument('-v', '--verbose', '--debug', action='store_true', help='Show which proxy is being used for each request')
-    advanced_group.add_argument('--slack-url', help='Send important output to Slack webhook URL.')
+
+    dongit_group = parser.add_argument_group(title='DongIT arguments', description='Arguments specific for DongIT.')
+    dongit_group.add_argument('--slack-url', help='Send important output to Slack webhook URL.')
+    dongit_group.add_argument('--max-per-day', help='Maximum number of passwords to spray per day. Will be spread throughout the day.')
 
     ssh_group = parser.add_argument_group(title='SSH Proxy', description='Round-robin traffic through remote systems via SSH (overrides --threads)')
     ssh_group.add_argument('-s', '--ssh', default=[], metavar='USER@SERVER', nargs='+', help='Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round')
@@ -91,22 +94,10 @@ def main():
                 log.info('IPv6 subnet specified, assuming --prefer-ipv6')
                 options.prefer_ipv6 = True
 
-        # inform user of --delay/--jitter configuration
-        avg_delay = options.delay + (options.jitter / 2)
-        per_minute = (60 / (max(1, avg_delay))) * max(1, len(options.ssh))
-        per_ip = 60 / max(1, avg_delay)
-        jitter_str = ('~' if options.jitter else '')
-        delays = []
-        if options.delay:
-            delays.append(f'--delay {options.delay}')
-        if options.jitter:
-            delays.append(f'--jitter {options.jitter}')
-        delays = ' + '.join(delays)
-        if options.ssh and (options.delay or options.lockout_delay or options.jitter):
-            log.warning('When proxying through --ssh, jitter/delay is *per IP*')
-            log.warning(f'{len(options.ssh)}x SSH hosts + {delays} == {jitter_str}{per_minute:.1f} attempts per minute == {jitter_str}{per_ip:.1f} per minute per IP')
-        elif options.delay or options.jitter:
-            log.info(f'{delays} == {jitter_str}{per_minute:.1f} attempts per minute')
+        if options.max_per_day and (options.delay or options.jitter or options.ssh):
+            log.error('Option --max-per-day cannot be used together with --delay, --jitter, or --ssh.')
+            sys.exit(1)
+
 
         # Monkey patch to prioritize IPv4 or IPv6
         import socket
@@ -152,6 +143,29 @@ def main():
                     log.error(f'Please install {binary}')
                     sys.exit(1)
 
+        if options.max_per_day:
+            options.delay = calculate_delay(int(options.max_per_day), len(options.users))
+            log.info(f'Will spray {options.max_per_day} passwords per user per day.')
+            log.info(f'With {len(options.users)} users, this amounts to {len(options.users)*int(options.max_per_day)} attempts per day.')
+            log.info(f'The time between attempts is {int(options.delay)}s.')
+        # inform user of --delay/--jitter configuration
+        else:
+            avg_delay = options.delay + (options.jitter / 2)
+            per_minute = (60 / (max(1, avg_delay))) * max(1, len(options.ssh))
+            per_ip = 60 / max(1, avg_delay)
+            jitter_str = ('~' if options.jitter else '')
+            delays = []
+            if options.delay:
+                delays.append(f'--delay {options.delay}')
+            if options.jitter:
+                delays.append(f'--jitter {options.jitter}')
+            delays = ' + '.join(delays)
+            if options.ssh and (options.delay or options.lockout_delay or options.jitter):
+                log.warning('When proxying through --ssh, jitter/delay is *per IP*')
+                log.warning(f'{len(options.ssh)}x SSH hosts + {delays} == {jitter_str}{per_minute:.1f} attempts per minute == {jitter_str}{per_ip:.1f} per minute per IP')
+            elif options.delay or options.jitter:
+                log.info(f'{delays} == {jitter_str}{per_minute:.1f} attempts per minute')
+
         sprayer = TrevorSpray(options)
         sprayer.go()
 
@@ -173,6 +187,15 @@ def main():
     except KeyboardInterrupt:
         log.error('Interrupted')
         sys.exit(1)
+
+
+
+def calculate_delay(max_per_day: int, num_of_users: int) -> int:
+    # Returns the number of seconds of delay.
+    SECONDS_PER_DAY = 86400
+    delay = SECONDS_PER_DAY / (max_per_day * num_of_users)
+    return delay 
+
 
 if __name__ == '__main__':
     main()

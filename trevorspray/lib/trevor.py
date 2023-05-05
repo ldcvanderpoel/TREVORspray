@@ -244,3 +244,4 @@ class TrevorSpray:
                         break
 
         return self._domain
+    
